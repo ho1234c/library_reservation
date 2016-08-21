@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import smtplib
-from config import gmail_id, gmail_password, smtp_server, smtp_port
+from config import smtp_id, smtp_password, smtp_server, smtp_port
 from email.mime.text import MIMEText
 
 
@@ -9,7 +9,7 @@ def email_myself(msg):
     msg = MIMEText(str(msg))
     me = 'ho1234c@gmail.com'
 
-    msg['Subject'] = 'The my email'
+    msg['Subject'] = 'confirm reservation'
     msg['From'] = me
     msg['To'] = me
 
@@ -17,7 +17,7 @@ def email_myself(msg):
     session.ehlo()
     session.starttls()
 
-    session.login(gmail_id, gmail_password)
+    session.login(smtp_id, smtp_password)
     smtpresult = session.sendmail(me, [me], msg.as_string())
     session.quit()
 

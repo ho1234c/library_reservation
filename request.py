@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import sys
-from config import reservation_limit, library_id1, library_password1, library_id1, library_password1
+from config import reservation_limit, library_id1, library_password1, library_id2, library_password2
 from smtp import email_myself
 
 reload(sys)
@@ -19,7 +19,7 @@ def time_parser(time):
 
 
 # 비어있는 좌석 하나를 선택. time은 hour:minute 형태의 string
-def form_maker(seatType, time):
+def form_maker(seatType, time, id, pw):
     result = {}
     while seatType:
         # 자리 하나를 랜덤으로 선택
@@ -37,17 +37,18 @@ def form_maker(seatType, time):
             result['seat_id'] = seat_num_today
             result['Hsvar'] = time_parser(time)
             result['Hevar'] = result['Hsvar'] + reservation_limit - 1
+
             result['StimeVar'] = time.replace(':', "")
             result['EtimeVar'] = '00'
-            result['Userid'] = library_id1
-            result['Userpw'] = library_password1
+            result['Userid'] = id
+            result['Userpw'] = pw
             result['bars'] = '1700'
             break
 
     return result
 
 
-def main(name, time):
+def main(name, time, id, pw):
     # 좌석 초기화
     seatTypes = {
         'searchInternet': dict(zip([str(i) for i in range(1, 31)], [''] * len(range(1, 31)))),
@@ -75,31 +76,31 @@ def main(name, time):
             currentType = seatTypes[seatType]
             currentType[seatNum] = remain
 
-    formField = form_maker(seatTypes[name], time)
+    formField = form_maker(seatTypes[name], time, id, pw)
 
     if formField:
         # 자리 이름
         seat_today = int(formField['seat_id'])
 
         if 1 <= seat_today <= 30:
-            seat_today = '인터넷검색 ' + str(seat_today)
+            seat_today = 'searchInternet ' + str(seat_today)
         elif 45 <= seat_today <= 49:
-            seat_today = 'DVD ' + str(seat_today - 44)
+            seat_today = 'dvd ' + str(seat_today - 44)
         elif 52 <= seat_today <= 54:
-            seat_today = '어학 ' + str(seat_today - 51)
+            seat_today = 'linguistics ' + str(seat_today - 51)
         elif 67 <= seat_today <= 72:
-            seat_today = '노트북 ' + str(seat_today - 66)
+            seat_today = 'notebook ' + str(seat_today - 66)
         else:
             seat_today = 'No seat'
 
         response = requests.post("http://210.104.8.144:8800/Libmate3_web_hj/Vorvertrag_Sql.php", data=formField)
         email_myself(response.text + '\n\n' + seat_today)
     else:
-        email_myself('예약실패, 빈 좌석이 없습니다.')
+        email_myself('reservation fail. do not have empty seat')
     return
 
 if __name__ == "__main__":
-    main('searchInternet', '18:30')
+    main('notebook', '18:00', library_id1, library_password1)
 
 # form field#
 #
